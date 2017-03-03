@@ -30,6 +30,7 @@ import com.ubergeek42.weechat.relay.connection.AbstractConnection.StreamClosed;
 import com.ubergeek42.weechat.relay.connection.Connection;
 import com.ubergeek42.weechat.relay.connection.PlainConnection;
 import com.ubergeek42.weechat.relay.connection.SSHConnection;
+import com.ubergeek42.weechat.relay.connection.SSHUnixConnection;
 import com.ubergeek42.weechat.relay.connection.SSLConnection;
 import com.ubergeek42.weechat.relay.connection.WebSocketConnection;
 import com.ubergeek42.weechat.relay.protocol.RelayObject;
@@ -212,6 +213,11 @@ public class RelayService extends Service implements Connection.Observer {
 
     private enum TRY {POSSIBLE, LATER, IMPOSSIBLE}
 
+    private Connection getSSHConnection() throws com.jcraft.jsch.JSchException {
+	    return P.port == 0 ? new SSHUnixConnection(P.host, P.sshHost, P.sshPort, P.sshUser, P.sshPass, P.sshKey, P.sshKnownHosts) :
+		    new SSHConnection(P.host, P.port, P.sshHost, P.sshPort, P.sshUser, P.sshPass, P.sshKey, P.sshKnownHosts);
+    }
+
     private TRY connect() {
         if (DEBUG_CONNECTION) logger.debug("connect()");
 
@@ -226,7 +232,7 @@ public class RelayService extends Service implements Connection.Observer {
         Connection conn;
         try {
             switch (P.connectionType) {
-                case PREF_TYPE_SSH: conn = new SSHConnection(P.host, P.port, P.sshHost, P.sshPort, P.sshUser, P.sshPass, P.sshKey, P.sshKnownHosts); break;
+                case PREF_TYPE_SSH: conn = getSSHConnection(); break;
                 case PREF_TYPE_SSL: conn = new SSLConnection(P.host, P.port, P.sslSocketFactory); break;
                 case PREF_TYPE_WEBSOCKET: conn = new WebSocketConnection(P.host, P.port, P.wsPath, null); break;
                 case PREF_TYPE_WEBSOCKET_SSL: conn = new WebSocketConnection(P.host, P.port, P.wsPath, P.sslSocketFactory); break;
